@@ -1,0 +1,42 @@
+{
+  "originHash" : "bef2fecf10d650781f6ff45ad498e0f96cf57d61d3aafa1e881d0a66ff1ef4cf",
+  "pins" : [
+    {
+      "identity" : "quartzfilters",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ktiays/QuartzFilters.git",
+      "state" : {
+        "revision" : "7d8f7b801187a980ff471deacf58eb0b48d02517",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
+      }
+    },
+    {
+      "identity" : "swiftyruntime",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Helixform/SwiftyRuntime.git",
+      "state" : {
+        "revision" : "7a66b68f11111b4647fbe32efb3bb802f6bdc527",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "with",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ktiays/with.git",
+      "state" : {
+        "revision" : "3d00874eb59b36e9f06fe89ca30efe761e211f2e",
+        "version" : "2.1.4"
+      }
+    }
+  ],
+  "version" : 3
+}
