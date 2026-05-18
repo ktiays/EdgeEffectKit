@@ -26,10 +26,9 @@ class ViewController: UIViewController {
         let bounds = view.bounds
         scrollContentView.frame = bounds
         
-        let pocketHeight: CGFloat = 80
+        let pocketHeight: CGFloat = 120
         scrollPocket.frame = .init(x: 0, y: 0, width: bounds.width, height: pocketHeight)
         scrollPocket.backgroundCapture.frame = scrollPocket.frame
-        scrollPocket.maskLength = 44
     }
 }
 
@@ -45,6 +44,10 @@ struct ScrollContentView: View {
                         .foregroundStyle(colors[index % colors.count])
                         .frame(height: 60)
                         .frame(maxWidth: .infinity)
+                        .overlay(alignment: .leading) {
+                            Text("Item \(index)")
+                                .padding()
+                        }
                 }
             }
         }

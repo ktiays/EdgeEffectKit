@@ -8,22 +8,31 @@ import UIKit
 
 public typealias PlatformView = UIView
 public typealias PlatformColor = UIColor
-public typealias PlatformImage = UIImage
 
 extension UIView {
     
     var ensureLayer: CALayer { layer }
+    
+    var screenScaleFactor: CGFloat {
+        return window?.screen.scale ?? 1
+    }
 }
 #elseif canImport(AppKit)
 import AppKit
 
 public typealias PlatformView = NSView
 public typealias PlatformColor = NSColor
-public typealias PlatformImage = NSImage
 
 public class FlippedView: NSView {
     
     public override var isFlipped: Bool { true }
+    
+    public override func layout() {
+        super.layout()
+        layoutSubviews()
+    }
+    
+    public func layoutSubviews() { }
 }
 
 extension NSView {
@@ -31,6 +40,10 @@ extension NSView {
     var ensureLayer: CALayer {
         wantsLayer = true
         return layer!
+    }
+    
+    var screenScaleFactor: CGFloat {
+        return window?.screen?.backingScaleFactor ?? 1
     }
     
     func setNeedsLayout() {

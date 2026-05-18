@@ -35,6 +35,13 @@ open class BackdropView: PlatformView {
         super.init(coder: coder)
         wantsLayer = true
     }
+    
+    public override func layout() {
+        super.layout()
+        layoutSubviews()
+    }
+    
+    public func layoutSubviews() { }
     #elseif canImport(UIKit)
     open override class var layerClass: AnyClass {
         BackdropView.backdropLayerClass
