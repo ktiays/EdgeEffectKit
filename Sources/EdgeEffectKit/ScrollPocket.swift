@@ -10,21 +10,22 @@ import With
 #if canImport(UIKit)
 import UIKit
 
-public typealias PocketElementView = UIView
+public typealias _InternalBaseView = UIView
 #elseif canImport(AppKit)
 import AppKit
 
-public typealias PocketElementView = FlippedView
+public typealias _InternalBaseView = FlippedView
 #else
 #error("Unsupported platform")
 #endif
 
-public class ScrollPocket: PocketElementView {
+class ScrollPocket: _InternalBaseView {
 
     private let pocketMaskedBlur: PocketBlur = .init()
     private let luminanceAdjustment: LuminanceAdjustment = .init()
 
-    public let backgroundCapture: BackdropView = .init()
+    var backgroundCapture: PlatformView { _backgroundCapture }
+    private let _backgroundCapture: BackdropView = .init()
 
     open var replayBackgroundColor: PlatformColor? {
         get {
@@ -58,14 +59,14 @@ public class ScrollPocket: PocketElementView {
         updatePocketBlur()
 
         #if canImport(UIKit)
-        backgroundCapture.isUserInteractionEnabled = false
+        _backgroundCapture.isUserInteractionEnabled = false
         #endif
-        backgroundCapture.captureOnly = true
-        backgroundCapture.scale = 0.5
-        backgroundCapture.allowsGroupOpacity = true
-        backgroundCapture.groupNamespace = "owningContext"
+        _backgroundCapture.captureOnly = true
+        _backgroundCapture.scale = 0.5
+        _backgroundCapture.allowsGroupOpacity = true
+        _backgroundCapture.groupNamespace = "owningContext"
         let backgroundCaptureGroup = "backgroundGroup-\(ObjectIdentifier(luminanceAdjustment))"
-        backgroundCapture.groupName = backgroundCaptureGroup
+        _backgroundCapture.groupName = backgroundCaptureGroup
         luminanceAdjustment.backdropGroupName = backgroundCaptureGroup
     }
 
@@ -126,12 +127,6 @@ extension ScrollPocket {
         override init(frame rect: CGRect) {
             super.init(frame: rect)
 
-            tracksLuma = true
-            tracksLumaWhileHidden = true
-            if #available(iOS 26.0, macOS 26.0, *) {
-                allowsFilteredLuma = true
-                lumaUpdateRate = 0.25
-            }
         }
 
         @available(*, unavailable)
@@ -152,7 +147,7 @@ extension ScrollPocket {
 
 extension ScrollPocket {
 
-    private final class LuminanceAdjustment: PocketElementView {
+    private final class LuminanceAdjustment: _InternalBaseView {
         
         var backdropGroupName: String? {
             get {
@@ -207,9 +202,6 @@ extension ScrollPocket {
             #endif
 
             backdropView.scale = 0.5
-            if #available(iOS 26.0, macOS 26.0, *) {
-                backdropView.allowsFilteredLuma = true
-            }
             addSubview(backdropView)
 
             let pocketMaskLayer = pocketMask.ensureLayer
@@ -235,7 +227,7 @@ extension ScrollPocket {
 
 extension ScrollPocket {
     
-    private final class PocketMask: PocketElementView {
+    private final class PocketMask: _InternalBaseView {
 
         let contentLayer: CALayer = .init()
         private let noAnimationDelegate = NoAnimationDelegate()

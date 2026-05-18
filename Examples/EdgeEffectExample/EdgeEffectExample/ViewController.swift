@@ -10,25 +10,38 @@ import SwiftUI
 class ViewController: UIViewController {
 
     let scrollContentView: _UIHostingView<ScrollContentView> = .init(rootView: ScrollContentView())
-    let scrollPocket: ScrollPocket = .init(edge: .top)
+    let edgeEffectContainer: EdgeEffectContainer = .init()
+    
+    private var topEffectConfiguration: EdgeEffectConfiguration = .init()
+    private var bottomEffectConfiguration: EdgeEffectConfiguration = .init(isBlurEnabled: false)
+    
+    private let safeAreaIndicator: UIView = .init()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.addSubview(scrollPocket.backgroundCapture)
-        view.addSubview(scrollContentView)
-        view.addSubview(scrollPocket)
+        edgeEffectContainer.contentView = scrollContentView
+        view.addSubview(edgeEffectContainer)
+        
+        safeAreaIndicator.layer.borderColor = UIColor.systemRed.cgColor
+        safeAreaIndicator.layer.borderWidth = 1
+        safeAreaIndicator.isUserInteractionEnabled = false
+        view.addSubview(safeAreaIndicator)
     }
     
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         
         let bounds = view.bounds
-        scrollContentView.frame = bounds
+        let safeAreaInsets = view.safeAreaInsets
+        safeAreaIndicator.frame = bounds.inset(by: safeAreaInsets)
         
-        let pocketHeight: CGFloat = 120
-        scrollPocket.frame = .init(x: 0, y: 0, width: bounds.width, height: pocketHeight)
-        scrollPocket.backgroundCapture.frame = scrollPocket.frame
+        topEffectConfiguration.maskLength = safeAreaInsets.top + 54.8
+        bottomEffectConfiguration.maskLength = safeAreaInsets.bottom + 54.8
+        edgeEffectContainer.configuration.top = topEffectConfiguration
+        edgeEffectContainer.configuration.bottom = bottomEffectConfiguration
+        
+        edgeEffectContainer.frame = bounds
     }
 }
 
