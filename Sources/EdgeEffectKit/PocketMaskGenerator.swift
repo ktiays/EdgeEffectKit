@@ -89,6 +89,8 @@ struct PocketMaskGenerator {
         pixelCount: Int,
         edge: RectEdge
     ) {
+        // We use a function that is similar to `smoothstep` in shader languages,
+        // which will make the gradient smoother like what box shadows produce.
         func smoothStep(_ t: CGFloat) -> CGFloat {
             let t2 = t * t
             let t3 = t2 * t

@@ -112,6 +112,15 @@ class ScrollPocket: _InternalBaseView {
 extension ScrollPocket {
 
     private final class PocketBlur: BackdropView {
+        
+        private static let maskLayerName = "PocketBlurMask"
+        // swift-format-ignore
+        private static let maskColorMatrix: ColorMatrix = .init(
+            m11: 1.0, m12: 0.0, m13: 0.0, m14: 0.0,  m15:  0.0,
+            m21: 0.0, m22: 1.0, m23: 0.0, m24: 0.0,  m25:  0.0,
+            m31: 0.0, m32: 0.0, m33: 1.0, m34: 0.0,  m35:  0.0,
+            m41: 0.0, m42: 0.0, m43: 0.0, m44: 1.25, m45: -0.25
+        )
 
         var maskImage: CGImage? {
             didSet {
@@ -122,11 +131,40 @@ extension ScrollPocket {
             }
         }
         
-        private let pocketMask: PocketMask = .init()
+        private var pocketMask: PocketMask?
+        
+        private var ensurePocketMask: PocketMask {
+            if let pocketMask {
+                return pocketMask
+            }
+            
+            let pocketMask = PocketMask()
+            let pocketMaskContentLayer = pocketMask.contentLayer
+            
+            pocketMaskContentLayer.name = Self.maskLayerName
+            
+            let colorMatrix = QuartzFilter.colorMatrix()
+            colorMatrix.colorMatrix = Self.maskColorMatrix
+            pocketMaskContentLayer.quartzFilters = [colorMatrix]
+            
+            self.pocketMask = pocketMask
+            return pocketMask
+        }
         
         override init(frame rect: CGRect) {
             super.init(frame: rect)
-
+            
+            if #available(iOS 26.0, macOS 26.0, *) {
+                addSubview(ensurePocketMask)
+                
+                let variableBlur = QuartzFilter.variableBlur()
+                variableBlur.radius = 1
+                variableBlur.dither = false
+                variableBlur.normalizeEdges = true
+                variableBlur.fade = true
+                variableBlur.sourceSublayerName = Self.maskLayerName
+                ensureLayer.quartzFilters = [variableBlur]
+            }
         }
 
         @available(*, unavailable)
@@ -134,13 +172,25 @@ extension ScrollPocket {
             fatalError("init(coder:) has not been implemented")
         }
         
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            
+            if #available(iOS 26.0, macOS 26.0, *) {
+                ensurePocketMask.frame = bounds
+            }
+        }
+        
         private func updatePocketBlurFilter(shadowImage: CGImage?) {
-            let variableBlur = QuartzFilter.variableBlur()
-            variableBlur.radius = 1
-            variableBlur.dither = false
-            variableBlur.normalizeEdges = true
-            variableBlur.maskImage = shadowImage
-            ensureLayer.quartzFilters = [variableBlur]
+            if #available(iOS 26.0, macOS 26.0, *) {
+                ensurePocketMask.contentLayer.contents = shadowImage
+            } else {
+                let variableBlur = QuartzFilter.variableBlur()
+                variableBlur.radius = 1
+                variableBlur.dither = false
+                variableBlur.normalizeEdges = true
+                variableBlur.maskImage = shadowImage
+                ensureLayer.quartzFilters = [variableBlur]
+            }
         }
     }
 }
