@@ -8,7 +8,6 @@ import QuartzFilters
 import With
 
 #if canImport(UIKit)
-import CEdgeEffectKit
 import UIKit
 
 public typealias PocketElementView = UIView
@@ -22,9 +21,8 @@ public typealias PocketElementView = FlippedView
 
 public class ScrollPocket: PocketElementView {
 
-    private let edge: RectEdge
-    private let pocketMaskedBlur: PocketBlur
-    private let luminanceAdjustment: LuminanceAdjustment
+    private let pocketMaskedBlur: PocketBlur = .init()
+    private let luminanceAdjustment: LuminanceAdjustment = .init()
 
     public let backgroundCapture: BackdropView = .init()
 
@@ -59,11 +57,11 @@ public class ScrollPocket: PocketElementView {
             }
         }
     }
+    
+    private var shadowGenerator: PocketMaskGenerator
 
     public required init(edge: RectEdge) {
-        self.edge = edge
-        pocketMaskedBlur = .init(edge: edge)
-        luminanceAdjustment = .init(edge: edge)
+        shadowGenerator = .init(edge: edge)
         super.init(frame: .zero)
         
         #if canImport(UIKit)
@@ -95,10 +93,17 @@ public class ScrollPocket: PocketElementView {
         super.layoutSubviews()
         
         let bounds = self.bounds
+        
+        let edge = shadowGenerator.edge
+        shadowGenerator.length = if edge == .top || edge == .bottom { bounds.height } else { bounds.width }
+        shadowGenerator.scaleFactor = screenScaleFactor
+        
         if pocketMaskedBlur.superview != nil {
+            pocketMaskedBlur.maskImage = shadowGenerator.renderShadowImage()
             pocketMaskedBlur.frame = bounds
         }
         luminanceAdjustment.frame = bounds
+        luminanceAdjustment.pocketMask.contentLayer.contents = shadowGenerator.renderShadowImage()
     }
     
     private func updatePocketBlur() {
@@ -122,11 +127,17 @@ extension ScrollPocket {
 
     private final class PocketBlur: BackdropView {
 
-        let edge: RectEdge
+        var maskImage: CGImage? {
+            didSet {
+                guard oldValue != maskImage else {
+                    return
+                }
+                updatePocketBlurFilter(shadowImage: maskImage)
+            }
+        }
         
-        init(edge: RectEdge) {
-            self.edge = edge
-            super.init(frame: .zero)
+        override init(frame rect: CGRect) {
+            super.init(frame: rect)
 
             tracksLuma = true
             tracksLumaWhileHidden = true
@@ -139,19 +150,6 @@ extension ScrollPocket {
         @available(*, unavailable)
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            
-            let bounds = self.bounds
-            let shadowGenerator = ShadowGenerator(
-                edge: edge,
-                length: bounds.height,
-                scaleFactor: screenScaleFactor
-            )
-            
-            updatePocketBlurFilter(shadowImage: shadowGenerator.renderShadowImage())
         }
         
         private func updatePocketBlurFilter(shadowImage: CGImage?) {
@@ -170,11 +168,10 @@ extension ScrollPocket {
     private final class LuminanceAdjustment: PocketElementView {
 
         let backdropView: BackdropView = .init()
-        let shadowView: ShadowView
+        let pocketMask: PocketMask = .init()
 
-        init(edge: RectEdge) {
-            shadowView = .init(edge: edge)
-            super.init(frame: .zero)
+        override init(frame rect: CGRect) {
+            super.init(frame: rect)
 
             #if canImport(UIKit)
             self.isUserInteractionEnabled = false
@@ -189,10 +186,10 @@ extension ScrollPocket {
             }
             addSubview(backdropView)
 
-            let shadowViewLayer = shadowView.ensureLayer
-            shadowViewLayer.allowsGroupBlending = true
-            shadowViewLayer.compositingFilter = "destIn" as NSString
-            addSubview(shadowView)
+            let pocketMaskLayer = pocketMask.ensureLayer
+            pocketMaskLayer.allowsGroupBlending = true
+            pocketMaskLayer.compositingFilter = "destIn" as NSString
+            addSubview(pocketMask)
         }
 
         @available(*, unavailable)
@@ -205,23 +202,23 @@ extension ScrollPocket {
             
             let bounds = self.bounds
             backdropView.frame = bounds
-            shadowView.frame = bounds
+            pocketMask.frame = bounds
         }
     }
 }
 
 extension ScrollPocket {
     
-    private final class ShadowView: PocketElementView {
+    private final class PocketMask: PocketElementView {
+
+        let contentLayer: CALayer = .init()
+        private let noAnimationDelegate = NoAnimationDelegate()
         
-        let edge: RectEdge
-        
-        let shadowLayer: CALayer = .init()
-        
-        init(edge: RectEdge) {
-            self.edge = edge
-            super.init(frame: .zero)
-            ensureLayer.addSublayer(shadowLayer)
+        override init(frame rect: CGRect) {
+            super.init(frame: rect)
+            
+            contentLayer.delegate = noAnimationDelegate
+            ensureLayer.addSublayer(contentLayer)
         }
         
         @available(*, unavailable)
@@ -232,15 +229,7 @@ extension ScrollPocket {
         override func layoutSubviews() {
             super.layoutSubviews()
             
-            let bounds = self.bounds
-            let shadowGenerator = ShadowGenerator(
-                edge: edge,
-                length: bounds.height,
-                scaleFactor: screenScaleFactor
-            )
-            
-            shadowLayer.frame = bounds
-            shadowLayer.contents = shadowGenerator.renderShadowImage()
+            contentLayer.frame = bounds
         }
     }
 }

@@ -32,7 +32,7 @@ class ViewController: NSViewController {
         scrollView.frame = bounds
         contentView.frame.size.width = bounds.width
         
-        let pocketHeight: CGFloat = 64
+        let pocketHeight: CGFloat = view.safeAreaInsets.top
         scrollPocket.frame = .init(x: 0, y: bounds.height - pocketHeight, width: bounds.width, height: pocketHeight)
     }
 }
@@ -50,6 +50,7 @@ struct ScrollContentView: View {
                     .frame(maxWidth: .infinity)
                     .overlay(alignment: .leading) {
                         Text("Item \(index)")
+                            .foregroundStyle(.white)
                             .padding()
                     }
             }

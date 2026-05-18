@@ -5,13 +5,53 @@
 
 import CoreGraphics
 
-struct ShadowGenerator {
+struct PocketMaskGenerator {
     
-    let edge: RectEdge
-    let length: CGFloat
-    let scaleFactor: CGFloat
+    var edge: RectEdge {
+        didSet {
+            guard edge != oldValue else {
+                return
+            }
+            invalidateImageCache()
+        }
+    }
+    
+    var length: CGFloat {
+        didSet {
+            guard length != oldValue else {
+                return
+            }
+            invalidateImageCache()
+        }
+    }
+    
+    var scaleFactor: CGFloat {
+        didSet {
+            guard scaleFactor != oldValue else {
+                return
+            }
+            invalidateImageCache()
+        }
+    }
+    
+    private var imageCache: CGImage?
+    
+    init(edge: RectEdge, length: CGFloat = 0, scaleFactor: CGFloat = 1.0) {
+        self.edge = edge
+        self.length = length
+        self.scaleFactor = scaleFactor
+        self.imageCache = nil
+    }
+    
+    private mutating func invalidateImageCache() {
+        imageCache = nil
+    }
     
     func renderShadowImage() -> CGImage? {
+        if let imageCache {
+            return imageCache
+        }
+        
         let edge = self.edge
         let lengthInPixel = Int(ceil(length * scaleFactor))
         
@@ -31,18 +71,24 @@ struct ShadowGenerator {
         return pixelData.withUnsafeMutableBytes { pixelDataPointer in
             let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
                 | CGBitmapInfo.byteOrder32Big.rawValue
-            let ctx = CGContext(data: .init(pixelDataPointer.baseAddress),
-                                width: imageSize.0, height: imageSize.1,
-                                bitsPerComponent: 8, bytesPerRow: bytesPerRow,
-                                space: CGColorSpaceCreateDeviceRGB(),
-                                bitmapInfo: bitmapInfo)
+            let ctx = CGContext(
+                data: .init(pixelDataPointer.baseAddress),
+                width: imageSize.0,
+                height: imageSize.1,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: bitmapInfo
+            )
             return ctx?.makeImage()
         }
     }
     
-    static private func renderShadow(in pixelBuffer: UnsafeMutableBufferPointer<UInt8>,
-                                     pixelCount: Int,
-                                     edge: RectEdge) {
+    static private func renderShadow(
+        in pixelBuffer: UnsafeMutableBufferPointer<UInt8>,
+        pixelCount: Int,
+        edge: RectEdge
+    ) {
         func smoothStep(_ t: CGFloat) -> CGFloat {
             let t2 = t * t
             let t3 = t2 * t

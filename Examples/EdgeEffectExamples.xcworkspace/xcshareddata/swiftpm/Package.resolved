@@ -1,13 +1,13 @@
 {
-  "originHash" : "d437bfe07389ab464c156fc132c7f98a3ee3d01d62a1b9fdcbcc10121f5233ad",
+  "originHash" : "b6703ee82d368cdbbcbc7012b55c6040500a7a22fa883afd86a36b4518d60e83",
   "pins" : [
     {
       "identity" : "quartzfilters",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ktiays/QuartzFilters.git",
       "state" : {
-        "revision" : "7d8f7b801187a980ff471deacf58eb0b48d02517",
-        "version" : "1.0.0"
+        "revision" : "332a7a4ab507cf41a3131ce1f56f43c192d1ab59",
+        "version" : "1.1.0"
       }
     },
     {

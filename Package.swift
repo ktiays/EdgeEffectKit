@@ -6,28 +6,23 @@ import PackageDescription
 let package = Package(
     name: "EdgeEffectKit",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14),
+        .iOS(.v15),
+        .macOS(.v12),
     ],
     products: [
         .library(name: "EdgeEffectKit", targets: ["EdgeEffectKit"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ktiays/QuartzFilters.git", from: "1.0.0"),
+        .package(url: "https://github.com/ktiays/QuartzFilters.git", from: "1.1.0"),
         .package(url: "https://github.com/ktiays/with.git", from: "2.1.4")
     ],
     targets: [
         .target(
             name: "EdgeEffectKit",
             dependencies: [
-                "CEdgeEffectKit",
                 .product(name: "QuartzFilters", package: "QuartzFilters"),
                 .product(name: "With", package: "with")
             ]
-        ),
-        .target(
-            name: "CEdgeEffectKit",
-            publicHeadersPath: "include"
         )
     ]
 )
