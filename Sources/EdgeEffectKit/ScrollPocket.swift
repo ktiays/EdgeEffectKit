@@ -28,25 +28,10 @@ public class ScrollPocket: PocketElementView {
 
     open var replayBackgroundColor: PlatformColor? {
         get {
-            #if canImport(UIKit)
-            luminanceAdjustment.backdropView.backgroundColor
-            #elseif canImport(AppKit)
-            guard let cgColor = luminanceAdjustment.backdropView.layer?.backgroundColor else {
-                return nil
-            }
-            return NSColor(cgColor: cgColor)
-            #else
-            #error("Unsupported platform")
-            #endif
+            return luminanceAdjustment.replayBackgroundColor
         }
         set {
-            #if canImport(UIKit)
-            luminanceAdjustment.backdropView.backgroundColor = newValue
-            #elseif canImport(AppKit)
-            luminanceAdjustment.backdropView.layer?.backgroundColor = newValue?.cgColor
-            #else
-            #error("Unsupported platform")
-            #endif
+            luminanceAdjustment.replayBackgroundColor = newValue
         }
     }
 
@@ -81,7 +66,7 @@ public class ScrollPocket: PocketElementView {
         backgroundCapture.groupNamespace = "owningContext"
         let backgroundCaptureGroup = "backgroundGroup-\(ObjectIdentifier(luminanceAdjustment))"
         backgroundCapture.groupName = backgroundCaptureGroup
-        luminanceAdjustment.backdropView.groupName = backgroundCaptureGroup
+        luminanceAdjustment.backdropGroupName = backgroundCaptureGroup
     }
 
     @available(*, unavailable)
@@ -103,7 +88,7 @@ public class ScrollPocket: PocketElementView {
             pocketMaskedBlur.frame = bounds
         }
         luminanceAdjustment.frame = bounds
-        luminanceAdjustment.pocketMask.contentLayer.contents = shadowGenerator.renderShadowImage()
+        luminanceAdjustment.maskImage = shadowGenerator.renderShadowImage()
     }
     
     private func updatePocketBlur() {
@@ -136,6 +121,8 @@ extension ScrollPocket {
             }
         }
         
+        private let pocketMask: PocketMask = .init()
+        
         override init(frame rect: CGRect) {
             super.init(frame: rect)
 
@@ -166,9 +153,48 @@ extension ScrollPocket {
 extension ScrollPocket {
 
     private final class LuminanceAdjustment: PocketElementView {
+        
+        var backdropGroupName: String? {
+            get {
+                return backdropView.groupName
+            }
+            set {
+                backdropView.groupName = newValue
+            }
+        }
+        
+        var replayBackgroundColor: PlatformColor? {
+            get {
+                #if canImport(UIKit)
+                backdropView.backgroundColor
+                #elseif canImport(AppKit)
+                guard let cgColor = backdropView.layer?.backgroundColor else {
+                    return nil
+                }
+                return NSColor(cgColor: cgColor)
+                #else
+                #error("Unsupported platform")
+                #endif
+            }
+            set {
+                #if canImport(UIKit)
+                backdropView.backgroundColor = newValue
+                #elseif canImport(AppKit)
+                backdropView.layer?.backgroundColor = newValue?.cgColor
+                #else
+                #error("Unsupported platform")
+                #endif
+            }
+        }
+        
+        var maskImage: CGImage? {
+            didSet {
+                pocketMask.contentLayer.contents = maskImage
+            }
+        }
 
-        let backdropView: BackdropView = .init()
-        let pocketMask: PocketMask = .init()
+        private let backdropView: BackdropView = .init()
+        private let pocketMask: PocketMask = .init()
 
         override init(frame rect: CGRect) {
             super.init(frame: rect)
