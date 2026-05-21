@@ -128,13 +128,14 @@ open class EdgeEffectContainer: _InternalBaseView {
         }
     }
     
-    private func makeViewConstraintsToEdge(_ view: PlatformView) {
+    private func makeViewConstraintsToEdge(_ view: PlatformView, relativeTo container: PlatformView? = nil) {
+        let container = container ?? self
         view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            view.topAnchor.constraint(equalTo: topAnchor),
-            view.bottomAnchor.constraint(equalTo: bottomAnchor),
-            view.leadingAnchor.constraint(equalTo: leadingAnchor),
-            view.trailingAnchor.constraint(equalTo: trailingAnchor),
+            view.topAnchor.constraint(equalTo: container.topAnchor),
+            view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
         ])
     }
     
@@ -149,7 +150,7 @@ open class EdgeEffectContainer: _InternalBaseView {
                 pocketBackgroundCapture.removeFromSuperview()
             } else if pocketBackgroundCapture.superview != self {
                 insertSubview(pocketBackgroundCapture, belowSubview: contentContainer)
-                makeViewConstraintsToEdge(pocketBackgroundCapture)
+                makeViewConstraintsToEdge(pocketBackgroundCapture, relativeTo: pocket)
             }
         }
     }
