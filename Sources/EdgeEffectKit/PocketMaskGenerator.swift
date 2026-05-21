@@ -16,9 +16,18 @@ struct PocketMaskGenerator {
         }
     }
     
-    var length: CGFloat {
+    var solidLength: CGFloat {
         didSet {
-            guard length != oldValue else {
+            guard solidLength != oldValue else {
+                return
+            }
+            invalidateImageCache()
+        }
+    }
+    
+    var blendingLength: CGFloat {
+        didSet {
+            guard blendingLength != oldValue else {
                 return
             }
             invalidateImageCache()
@@ -36,10 +45,11 @@ struct PocketMaskGenerator {
     
     private var imageCache: CGImage?
     
-    init(edge: RectEdge, length: CGFloat = 0, scaleFactor: CGFloat = 1.0) {
+    init(edge: RectEdge) {
         self.edge = edge
-        self.length = length
-        self.scaleFactor = scaleFactor
+        self.solidLength = 0
+        self.blendingLength = 0
+        self.scaleFactor = 1.0
         self.imageCache = nil
     }
     
@@ -53,18 +63,25 @@ struct PocketMaskGenerator {
         }
         
         let edge = self.edge
-        let lengthInPixel = Int(ceil(length * scaleFactor))
+        let solidPixelCount = Int(ceil(solidLength * scaleFactor))
+        let blendingPixelCount = Int(ceil(blendingLength * scaleFactor))
+        let pixelCount = solidPixelCount + blendingPixelCount
         
         let imageSize = if edge == .left || edge == .right {
-            (lengthInPixel, 1)
+            (pixelCount, 1)
         } else {
-            (1, lengthInPixel)
+            (1, pixelCount)
         }
         
         let bytesPerRow = imageSize.0 * 4
         let byteCount = bytesPerRow * imageSize.1
         var pixelData = [UInt8](unsafeUninitializedCapacity: byteCount) { buffer, initializedCount in
-            Self.renderShadow(in: buffer, pixelCount: imageSize.0 * imageSize.1, edge: edge)
+            Self.renderShadow(
+                in: buffer,
+                solidPixelCount: solidPixelCount,
+                blendingPixelCount: blendingPixelCount,
+                edge: edge
+            )
             initializedCount = byteCount
         }
         
@@ -86,7 +103,8 @@ struct PocketMaskGenerator {
     
     static private func renderShadow(
         in pixelBuffer: UnsafeMutableBufferPointer<UInt8>,
-        pixelCount: Int,
+        solidPixelCount: Int,
+        blendingPixelCount: Int,
         edge: RectEdge
     ) {
         // We use a function that is similar to `smoothstep` in shader languages,
@@ -97,24 +115,40 @@ struct PocketMaskGenerator {
             return 3 * t2 - 2 * t3
         }
         
-        let calculateAlpha = if edge == .left || edge == .top {
-            { (pixel: Int) in
-                let t = 1.0 - (CGFloat(pixel) / CGFloat(pixelCount))
-                return UInt8(smoothStep(t) * 255.0)
-            }
-        } else {
-            { (pixel: Int) in
-                let t = CGFloat(pixel) / CGFloat(pixelCount)
-                return UInt8(smoothStep(t) * 255.0)
+        let isReversed = edge == .right || edge == .bottom
+        
+        let calculateT = isReversed ? { (pixel: Int) in
+            return CGFloat(pixel) / CGFloat(blendingPixelCount)
+        } : { (pixel: Int) in
+            return 1.0 - (CGFloat(pixel) / CGFloat(blendingPixelCount))
+        }
+        
+        var offset = 0
+        
+        let fillSolid = {
+            for _ in 0..<solidPixelCount {
+                pixelBuffer[offset] = 0
+                pixelBuffer[offset + 1] = 0
+                pixelBuffer[offset + 2] = 0
+                pixelBuffer[offset + 3] = 255
+                offset += 4
             }
         }
         
-        for i in 0..<pixelCount {
-            let offset = i * 4
+        if !isReversed {
+            fillSolid()
+        }
+        
+        for i in 0..<blendingPixelCount {
             pixelBuffer[offset] = 0
             pixelBuffer[offset + 1] = 0
             pixelBuffer[offset + 2] = 0
-            pixelBuffer[offset + 3] = calculateAlpha(i)
+            pixelBuffer[offset + 3] = UInt8(smoothStep(calculateT(i)) * 255.0)
+            offset += 4
+        }
+        
+        if isReversed {
+            fillSolid()
         }
     }
 }

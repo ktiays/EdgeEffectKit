@@ -81,7 +81,7 @@ class ScrollPocket: _InternalBaseView {
         let bounds = self.bounds
         
         let edge = shadowGenerator.edge
-        shadowGenerator.length = if edge == .top || edge == .bottom { bounds.height } else { bounds.width }
+        shadowGenerator.blendingLength = if edge == .top || edge == .bottom { bounds.height } else { bounds.width }
         shadowGenerator.scaleFactor = screenScaleFactor
         
         if pocketMaskedBlur.superview != nil {
