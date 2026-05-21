@@ -23,7 +23,7 @@ import AppKit
 public typealias PlatformView = NSView
 public typealias PlatformColor = NSColor
 
-public class FlippedView: NSView {
+open class FlippedView: NSView {
     
     public override var isFlipped: Bool { true }
     
@@ -33,6 +33,14 @@ public class FlippedView: NSView {
     }
     
     public func layoutSubviews() { }
+    
+    public func insertSubview(_ view: NSView, belowSubview siblingSubview: NSView) {
+        addSubview(view, positioned: .below, relativeTo: siblingSubview)
+    }
+    
+    public func insertSubview(_ view: NSView, aboveSubview siblingSubview: NSView) {
+        addSubview(view, positioned: .above, relativeTo: siblingSubview)
+    }
 }
 
 extension NSView {

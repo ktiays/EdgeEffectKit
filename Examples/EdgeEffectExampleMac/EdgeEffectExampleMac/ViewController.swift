@@ -11,29 +11,31 @@ class ViewController: NSViewController {
     
     let scrollView: NSScrollView = .init()
     let contentView: NSHostingView<ScrollContentView> = .init(rootView: .init())
-    let scrollPocket: ScrollPocket = .init(edge: .top)
+    let edgeEffectContainer: EdgeEffectContainer = .init()
+    
+    private var topEffectConfiguration: EdgeEffectConfiguration = .init()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.addSubview(scrollPocket.backgroundCapture)
-        view.addSubview(scrollView)
-        view.addSubview(scrollPocket)
-        
         scrollView.documentView = contentView
         contentView.frame = .init(origin: .zero, size: .init(width: 0, height: 6000))
+        
+        edgeEffectContainer.contentView = scrollView
+        view.addSubview(edgeEffectContainer)
     }
     
     override func viewWillLayout() {
         super.viewWillLayout()
         
         let bounds = view.bounds
-        scrollPocket.backgroundCapture.frame = bounds
-        scrollView.frame = bounds
-        contentView.frame.size.width = bounds.width
+        let safeAreaInsets = view.safeAreaInsets
         
-        let pocketHeight: CGFloat = view.safeAreaInsets.top
-        scrollPocket.frame = .init(x: 0, y: bounds.height - pocketHeight, width: bounds.width, height: pocketHeight)
+        topEffectConfiguration.maskLength = safeAreaInsets.top + 54.8
+        edgeEffectContainer.configuration.top = topEffectConfiguration
+        
+        edgeEffectContainer.frame = bounds
+        contentView.frame.size.width = bounds.width
     }
 }
 
