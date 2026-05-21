@@ -249,6 +249,7 @@ extension ScrollPocket {
             backdropView.alpha = 0.85
             #elseif canImport(AppKit)
             ensureLayer.allowsGroupBlending = true
+            backdropView.alphaValue = 0.85
             #endif
 
             backdropView.scale = 0.5
