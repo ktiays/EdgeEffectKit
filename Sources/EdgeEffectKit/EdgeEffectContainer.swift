@@ -11,22 +11,34 @@ import AppKit
 #error("Unsupported platform")
 #endif
 
+/// Configuration values for an effect rendered along one edge.
 public struct EdgeEffectConfiguration: Sendable, Hashable {
     
+    /// A Boolean value that indicates whether the edge effect includes variable blur.
     public var isBlurEnabled: Bool
     
+    /// The length, in points, over which the edge effect is rendered.
     public var maskLength: CGFloat
     
+    /// Creates an edge effect configuration.
+    ///
+    /// - Parameters:
+    ///   - isBlurEnabled: A Boolean value that indicates whether the edge effect includes variable blur.
+    ///   - maskLength: The length, in points, over which the edge effect is rendered.
     public init(isBlurEnabled: Bool = true, maskLength: CGFloat = 12) {
         self.isBlurEnabled = isBlurEnabled
         self.maskLength = maskLength
     }
 }
 
+/// A view that renders configurable visual effects along the edges of its content.
+@objc(EEKEdgeEffectContainer)
 open class EdgeEffectContainer: _InternalBaseView {
     
+    /// Configuration values that control which edges render effects and how their background is sampled.
     public struct Configuration: Hashable, Sendable {
         
+        /// The color to replay behind edge effects instead of capturing the container background.
         public var replayBackgroundColor: PlatformColor?
         
         public var top: EdgeEffectConfiguration?
@@ -38,6 +50,7 @@ open class EdgeEffectContainer: _InternalBaseView {
         public var bottom: EdgeEffectConfiguration?
     }
     
+    /// The view displayed below the configured edge effects.
     open var contentView: PlatformView? {
         didSet {
             guard contentView !== oldValue else {
@@ -52,6 +65,7 @@ open class EdgeEffectContainer: _InternalBaseView {
         }
     }
     
+    /// The active edge effect configuration for the container.
     open var configuration: EdgeEffectContainer.Configuration = .init() {
         didSet {
             guard configuration != oldValue else {
@@ -120,6 +134,7 @@ open class EdgeEffectContainer: _InternalBaseView {
         ])
     }
     
+    /// Synchronizes each pocket's background source with `configuration`.
     private func updateBackgroundCaptures() {
         let replayBackgroundColor = configuration.replayBackgroundColor
         for pocket in scrollPockets.values {
@@ -135,6 +150,7 @@ open class EdgeEffectContainer: _InternalBaseView {
         }
     }
     
+    /// Creates, reuses, or removes pocket views to match the enabled edges in `configuration`.
     private func updatePockets() {
         func update(for edge: RectEdge, configuration: EdgeEffectConfiguration?) {
             guard let configuration else {
