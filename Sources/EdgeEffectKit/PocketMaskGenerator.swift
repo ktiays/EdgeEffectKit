@@ -101,18 +101,25 @@ struct PocketMaskGenerator {
         }
     }
     
+    private static let SIGMA: CGFloat = 2.5
+    
+    private static func standardNormalCDF(_ value: CGFloat) -> CGFloat {
+        return 0.5 * (1.0 + erf(value / sqrt(2.0)))
+    }
+    
     static private func renderShadow(
         in pixelBuffer: UnsafeMutableBufferPointer<UInt8>,
         solidPixelCount: Int,
         blendingPixelCount: Int,
         edge: RectEdge
     ) {
-        // We use a function that is similar to `smoothstep` in shader languages,
-        // which will make the gradient smoother like what box shadows produce.
-        func smoothStep(_ t: CGFloat) -> CGFloat {
-            let t2 = t * t
-            let t3 = t2 * t
-            return 3 * t2 - 2 * t3
+        func transitionAlpha(_ t: CGFloat) -> CGFloat {
+            let boundedT = clamp(t, min: 0.0, max: 1.0)
+            let z = -SIGMA + ((SIGMA * 2.0) * boundedT)
+            let sigmaCDF = standardNormalCDF(SIGMA)
+            let denominator = sigmaCDF - standardNormalCDF(-SIGMA)
+            let value = (sigmaCDF - standardNormalCDF(z)) / denominator
+            return 1.0 - clamp(value, min: 0.0, max: 1.0)
         }
         
         let isReversed = edge == .right || edge == .bottom
@@ -143,7 +150,7 @@ struct PocketMaskGenerator {
             pixelBuffer[offset] = 0
             pixelBuffer[offset + 1] = 0
             pixelBuffer[offset + 2] = 0
-            pixelBuffer[offset + 3] = UInt8(smoothStep(calculateT(i)) * 255.0)
+            pixelBuffer[offset + 3] = UInt8(transitionAlpha(calculateT(i)) * 255.0)
             offset += 4
         }
         
