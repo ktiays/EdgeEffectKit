@@ -41,12 +41,16 @@ open class EdgeEffectContainer: _InternalBaseView {
         /// The color to replay behind edge effects instead of capturing the container background.
         public var replayBackgroundColor: PlatformColor?
         
+        /// The configuration for the top edge effect, or `nil` to disable it.
         public var top: EdgeEffectConfiguration?
         
+        /// The configuration for the left edge effect, or `nil` to disable it.
         public var left: EdgeEffectConfiguration?
         
+        /// The configuration for the right edge effect, or `nil` to disable it.
         public var right: EdgeEffectConfiguration?
         
+        /// The configuration for the bottom edge effect, or `nil` to disable it.
         public var bottom: EdgeEffectConfiguration?
     }
     
