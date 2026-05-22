@@ -103,10 +103,6 @@ struct PocketMaskGenerator {
     
     private static let SIGMA: CGFloat = 2.5
     
-    private static func standardNormalCDF(_ value: CGFloat) -> CGFloat {
-        return 0.5 * (1.0 + erf(value / sqrt(2.0)))
-    }
-    
     static private func renderShadow(
         in pixelBuffer: UnsafeMutableBufferPointer<UInt8>,
         solidPixelCount: Int,
@@ -114,8 +110,7 @@ struct PocketMaskGenerator {
         edge: RectEdge
     ) {
         func transitionAlpha(_ t: CGFloat) -> CGFloat {
-            let boundedT = clamp(t, min: 0.0, max: 1.0)
-            let z = -SIGMA + ((SIGMA * 2.0) * boundedT)
+            let z = -SIGMA + ((SIGMA * 2.0) * t)
             let sigmaCDF = standardNormalCDF(SIGMA)
             let denominator = sigmaCDF - standardNormalCDF(-SIGMA)
             let value = (sigmaCDF - standardNormalCDF(z)) / denominator

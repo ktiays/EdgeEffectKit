@@ -36,11 +36,27 @@ class ScrollPocket: _InternalBaseView {
         }
     }
 
-    open var isBlurEnabled: Bool = true {
+    var isBlurEnabled: Bool = true {
         didSet {
             if isBlurEnabled != oldValue {
                 updatePocketBlur()
             }
+        }
+    }
+    
+    var solidLength: CGFloat {
+        get { shadowGenerator.solidLength }
+        set {
+            shadowGenerator.solidLength = newValue
+            setNeedsLayout()
+        }
+    }
+    
+    var blendingLength: CGFloat {
+        get { shadowGenerator.blendingLength }
+        set {
+            shadowGenerator.blendingLength = newValue
+            setNeedsLayout()
         }
     }
     

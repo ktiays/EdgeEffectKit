@@ -14,20 +14,49 @@ import AppKit
 /// Configuration values for an effect rendered along one edge.
 public struct EdgeEffectConfiguration: Sendable, Hashable {
     
+    /// Constants that indicate where the transition region is placed relative to `extent`.
+    public enum EdgeMaskPlacement: Sendable, Hashable {
+
+        /// Aligns the end of the transition region exactly with `extent`.
+        case alignedToExtentEnd
+
+        /// Aligns the transition region with `extent` as it appears to the eye, allowing the region to
+        /// extend past `extent` to compensate for the non-linear transition curve.
+        case visuallyAlignedToExtentEnd
+
+        /// Places the transition region beyond `extent`, leaving the entire extent in the final mask state.
+        case afterExtent
+    }
+    
     /// A Boolean value that indicates whether the edge effect includes variable blur.
     public var isBlurEnabled: Bool
     
-    /// The length, in points, over which the edge effect is rendered.
-    public var maskLength: CGFloat
+    /// The total distance from the edge that the effect conceptually covers.
+    public var extent: CGFloat
     
-    /// Creates an edge effect configuration.
+    /// The length of the region over which the effect transitions between its final state and no effect.
+    public var transitionLength: CGFloat
+    
+    /// A value that determines where the transition region is positioned relative to `extent`.
+    public var maskPlacement: EdgeMaskPlacement
+    
+    /// Creates a configuration for an edge effect.
     ///
     /// - Parameters:
-    ///   - isBlurEnabled: A Boolean value that indicates whether the edge effect includes variable blur.
-    ///   - maskLength: The length, in points, over which the edge effect is rendered.
-    public init(isBlurEnabled: Bool = true, maskLength: CGFloat = 12) {
+    ///   - extent: The total distance from the edge that the effect conceptually covers.
+    ///   - transitionLength: The length of the region over which the effect transitions between its final state and no effect.
+    ///   - isBlurEnabled: A Boolean value that indicates whether the effect includes variable blur.
+    ///   - maskPlacement: A value that determines where the transition region is positioned relative to `extent`.
+    public init(
+        extent: CGFloat,
+        transitionLength: CGFloat = 12,
+        isBlurEnabled: Bool = true,
+        maskPlacement: EdgeMaskPlacement = .visuallyAlignedToExtentEnd
+    ) {
+        self.extent = extent
+        self.transitionLength = transitionLength
         self.isBlurEnabled = isBlurEnabled
-        self.maskLength = maskLength
+        self.maskPlacement = maskPlacement
     }
 }
 
@@ -54,6 +83,42 @@ open class EdgeEffectContainer: _InternalBaseView {
         public var bottom: EdgeEffectConfiguration?
     }
     
+    /// Resolved geometry for one edge's mask, measured relative to a baseline at the end of `extent`.
+    private struct EdgeMaskLayout {
+        
+        /// The mask length measured from the baseline toward the edge.
+        let aboveBaseline: CGFloat
+        
+        /// The mask length measured from the baseline away from the edge.
+        let belowBaseline: CGFloat
+        
+        /// The combined length the mask occupies along the edge's axis.
+        var proposedLength: CGFloat { aboveBaseline + belowBaseline }
+        
+        /// The length of the region rendered entirely in the final mask state.
+        let solidLength: CGFloat
+        
+        /// The length of the region over which the mask blends between its final state and no effect.
+        let blendingLength: CGFloat
+        
+        /// Derives the layout from `configuration`, anchoring the blending region according to its `maskPlacement`.
+        init(_ configuration: EdgeEffectConfiguration) {
+            let baselineAnchor: CGFloat =
+                switch configuration.maskPlacement {
+                case .alignedToExtentEnd:
+                    0.0
+                case .visuallyAlignedToExtentEnd:
+                    0.49
+                case .afterExtent:
+                    1.0
+                }
+            belowBaseline = configuration.transitionLength * baselineAnchor
+            aboveBaseline = max(configuration.extent, configuration.transitionLength * (1.0 - baselineAnchor))
+            blendingLength = configuration.transitionLength
+            solidLength = max(0, configuration.extent - configuration.transitionLength * (1.0 - baselineAnchor))
+        }
+    }
+    
     /// The view displayed below the configured edge effects.
     open var contentView: PlatformView? {
         didSet {
@@ -75,14 +140,20 @@ open class EdgeEffectContainer: _InternalBaseView {
             guard configuration != oldValue else {
                 return
             }
+            updateMaskLayouts()
             updatePockets()
             updateBackgroundCaptures()
             setNeedsLayout()
         }
     }
     
+    /// The active pocket views that render each enabled edge effect, keyed by edge.
     private var scrollPockets: [RectEdge: ScrollPocket] = [:]
+
+    /// Cached layout metrics for each enabled edge configuration.
+    private var maskLayouts: [EdgeEffectConfiguration: EdgeMaskLayout] = [:]
     
+    /// The container that hosts `contentView` beneath the edge effect pockets.
     private let contentContainer: _InternalBaseView = .init()
     
     public override init(frame: CGRect) {
@@ -109,25 +180,34 @@ open class EdgeEffectContainer: _InternalBaseView {
         for (edge, pocket) in scrollPockets {
             switch edge {
             case .top:
-                assert(configuration.top != nil)
-                let topMaskLength = configuration.top?.maskLength ?? 0
-                pocket.frame = .init(x: 0, y: 0, width: bounds.width, height: topMaskLength)
+                guard let conf = configuration.top, let layout = maskLayouts[conf] else {
+                    assertionFailure()
+                    continue
+                }
+                pocket.frame = .init(x: 0, y: conf.extent - layout.aboveBaseline, width: bounds.width, height: layout.proposedLength)
             case .left:
-                assert(configuration.left != nil)
-                let leftMaskLength = configuration.left?.maskLength ?? 0
-                pocket.frame = .init(x: 0, y: 0, width: leftMaskLength, height: bounds.height)
+                guard let conf = configuration.left, let layout = maskLayouts[conf] else {
+                    assertionFailure()
+                    continue
+                }
+                pocket.frame = .init(x: conf.extent - layout.aboveBaseline, y: 0, width: layout.proposedLength, height: bounds.height)
             case .bottom:
-                assert(configuration.bottom != nil)
-                let bottomMaskLength = configuration.bottom?.maskLength ?? 0
-                pocket.frame = .init(x: 0, y: bounds.height - bottomMaskLength, width: bounds.width, height: bottomMaskLength)
+                guard let conf = configuration.bottom, let layout = maskLayouts[conf] else {
+                    assertionFailure()
+                    continue
+                }
+                pocket.frame = .init(x: 0, y: bounds.height - conf.extent - layout.belowBaseline, width: bounds.width, height: layout.proposedLength)
             case .right:
-                assert(configuration.right != nil)
-                let rightMaskLength = configuration.right?.maskLength ?? 0
-                pocket.frame = .init(x: bounds.width - rightMaskLength, y: 0, width: rightMaskLength, height: bounds.height)
+                guard let conf = configuration.right, let layout = maskLayouts[conf] else {
+                    assertionFailure()
+                    continue
+                }
+                pocket.frame = .init(x: bounds.width - conf.extent - layout.belowBaseline, y: 0, width: layout.proposedLength, height: bounds.height)
             }
         }
     }
     
+    /// Pins every edge of `view` to `container`, or to the receiver when `container` is `nil`.
     private func makeViewConstraintsToEdge(_ view: PlatformView, relativeTo container: PlatformView? = nil) {
         let container = container ?? self
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -137,6 +217,23 @@ open class EdgeEffectContainer: _InternalBaseView {
             view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
         ])
+    }
+    
+    /// Rebuilds the cached layout metrics for the currently enabled edges.
+    private func updateMaskLayouts() {
+        maskLayouts.removeAll()
+        if let conf = configuration.top {
+            maskLayouts[conf] = .init(conf)
+        }
+        if let conf = configuration.left {
+            maskLayouts[conf] = .init(conf)
+        }
+        if let conf = configuration.bottom {
+            maskLayouts[conf] = .init(conf)
+        }
+        if let conf = configuration.right {
+            maskLayouts[conf] = .init(conf)
+        }
     }
     
     /// Synchronizes each pocket's background source with `configuration`.
@@ -158,7 +255,7 @@ open class EdgeEffectContainer: _InternalBaseView {
     /// Creates, reuses, or removes pocket views to match the enabled edges in `configuration`.
     private func updatePockets() {
         func update(for edge: RectEdge, configuration: EdgeEffectConfiguration?) {
-            guard let configuration else {
+            guard let configuration, let layout = maskLayouts[configuration] else {
                 scrollPockets.removeValue(forKey: edge)
                 return
             }
@@ -175,6 +272,8 @@ open class EdgeEffectContainer: _InternalBaseView {
                     }()
                 }
             pocket.isBlurEnabled = configuration.isBlurEnabled
+            pocket.solidLength = layout.solidLength
+            pocket.blendingLength = layout.blendingLength
         }
         update(for: .top, configuration: configuration.top)
         update(for: .left, configuration: configuration.left)

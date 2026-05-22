@@ -12,8 +12,8 @@ class ViewController: UIViewController {
     let scrollRootView: _UIHostingView<ScrollRootView> = .init(rootView: .init())
     let edgeEffectContainer: EdgeEffectContainer = .init()
     
-    private var topEffectConfiguration: EdgeEffectConfiguration = .init()
-    private var bottomEffectConfiguration: EdgeEffectConfiguration = .init(isBlurEnabled: false)
+    private var topEffectConfiguration: EdgeEffectConfiguration = .init(extent: 0)
+    private var bottomEffectConfiguration: EdgeEffectConfiguration = .init(extent: 0, isBlurEnabled: false)
     
     private let safeAreaIndicator: UIView = .init()
     
@@ -38,8 +38,10 @@ class ViewController: UIViewController {
         let safeAreaInsets = view.safeAreaInsets
         safeAreaIndicator.frame = bounds.inset(by: safeAreaInsets)
         
-        topEffectConfiguration.maskLength = safeAreaInsets.top + 54.8
-        bottomEffectConfiguration.maskLength = safeAreaInsets.bottom + 54.8
+        topEffectConfiguration.extent = safeAreaInsets.top
+        topEffectConfiguration.transitionLength = 50
+        bottomEffectConfiguration.extent = safeAreaInsets.bottom
+        bottomEffectConfiguration.transitionLength = 32
         edgeEffectContainer.configuration.top = topEffectConfiguration
         edgeEffectContainer.configuration.bottom = bottomEffectConfiguration
         

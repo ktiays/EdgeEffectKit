@@ -18,3 +18,8 @@ import Foundation
 func clamp<T>(_ value: T, min: T, max: T) -> T where T: Comparable {
     Swift.min(Swift.max(value, min), max)
 }
+
+@inlinable
+func standardNormalCDF<T>(_ value: T) -> T where T: BinaryFloatingPoint {
+    return T(0.5 * (1.0 + erf(Double(value) / sqrt(2.0))))
+}

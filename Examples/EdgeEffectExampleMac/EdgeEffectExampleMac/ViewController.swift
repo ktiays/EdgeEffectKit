@@ -13,7 +13,7 @@ class ViewController: NSViewController {
     let contentView: NSHostingView<ScrollContentView> = .init(rootView: .init())
     let edgeEffectContainer: EdgeEffectContainer = .init()
     
-    private var topEffectConfiguration: EdgeEffectConfiguration = .init()
+    private var topEffectConfiguration: EdgeEffectConfiguration = .init(extent: 0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,7 +31,8 @@ class ViewController: NSViewController {
         let bounds = view.bounds
         let safeAreaInsets = view.safeAreaInsets
         
-        topEffectConfiguration.maskLength = safeAreaInsets.top + 54.8
+        topEffectConfiguration.extent = safeAreaInsets.top
+        topEffectConfiguration.transitionLength = safeAreaInsets.top * 1.8
         edgeEffectContainer.configuration.top = topEffectConfiguration
         
         edgeEffectContainer.frame = bounds
