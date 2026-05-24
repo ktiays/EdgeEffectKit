@@ -14,7 +14,7 @@ public typealias _InternalBaseView = UIView
 #elseif canImport(AppKit)
 import AppKit
 
-public typealias _InternalBaseView = FlippedView
+public typealias _InternalBaseView = _FlippedView
 #else
 #error("Unsupported platform")
 #endif
@@ -57,6 +57,15 @@ class ScrollPocket: _InternalBaseView {
         set {
             shadowGenerator.blendingLength = newValue
             setNeedsLayout()
+        }
+    }
+    
+    var minimumOpacity: CGFloat {
+        get {
+            1 - luminanceAdjustment.backdropAlpha
+        }
+        set {
+            luminanceAdjustment.backdropAlpha = 1 - newValue
         }
     }
     
@@ -256,18 +265,38 @@ extension ScrollPocket {
 
         private let backdropView: BackdropView = .init()
         private let pocketMask: PocketMask = .init()
+        
+        var backdropAlpha: CGFloat {
+            get {
+                #if canImport(UIKit)
+                backdropView.alpha
+                #elseif canImport(AppKit)
+                backdropView.alphaValue
+                #else
+                #error("Unsupported platform")
+                #endif
+            }
+            set {
+                #if canImport(UIKit)
+                backdropView.alpha = newValue
+                #elseif canImport(AppKit)
+                backdropView.alphaValue = newValue
+                #else
+                #error("Unsupported platform")
+                #endif
+            }
+        }
 
         override init(frame rect: CGRect) {
             super.init(frame: rect)
 
             #if canImport(UIKit)
             self.isUserInteractionEnabled = false
-            backdropView.alpha = 0.85
             #elseif canImport(AppKit)
             ensureLayer.allowsGroupBlending = true
-            backdropView.alphaValue = 0.85
             #endif
 
+            backdropAlpha = 0.85
             backdropView.scale = 0.5
             addSubview(backdropView)
 

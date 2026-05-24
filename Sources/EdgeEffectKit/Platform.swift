@@ -23,7 +23,7 @@ import AppKit
 public typealias PlatformView = NSView
 public typealias PlatformColor = NSColor
 
-open class FlippedView: NSView {
+open class _FlippedView: NSView {
     
     public override var isFlipped: Bool { true }
     

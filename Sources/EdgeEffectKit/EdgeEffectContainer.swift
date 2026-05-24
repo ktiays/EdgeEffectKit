@@ -37,6 +37,9 @@ public struct EdgeEffectConfiguration: Sendable, Hashable {
     /// The length of the region over which the effect transitions between its final state and no effect.
     public var transitionLength: CGFloat
     
+    /// The minimum opacity the edge fade reaches at the end of the transition.
+    public var minimumOpacity: CGFloat
+    
     /// A value that determines where the transition region is positioned relative to `extent`.
     public var maskPlacement: EdgeMaskPlacement
     
@@ -51,11 +54,13 @@ public struct EdgeEffectConfiguration: Sendable, Hashable {
         extent: CGFloat,
         transitionLength: CGFloat = 12,
         isBlurEnabled: Bool = true,
+        minimumOpacity: CGFloat = 0.15,
         maskPlacement: EdgeMaskPlacement = .visuallyAlignedToExtentEnd
     ) {
         self.extent = extent
         self.transitionLength = transitionLength
         self.isBlurEnabled = isBlurEnabled
+        self.minimumOpacity = minimumOpacity
         self.maskPlacement = maskPlacement
     }
 }
@@ -274,6 +279,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             pocket.isBlurEnabled = configuration.isBlurEnabled
             pocket.solidLength = layout.solidLength
             pocket.blendingLength = layout.blendingLength
+            pocket.minimumOpacity = clamp(configuration.minimumOpacity, min: 0.0, max: 1.0)
         }
         update(for: .top, configuration: configuration.top)
         update(for: .left, configuration: configuration.left)
