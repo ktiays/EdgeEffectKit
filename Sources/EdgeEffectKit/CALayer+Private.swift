@@ -8,7 +8,7 @@ import SwiftyRuntime
 
 extension CALayer {
 
-    public var shadowPathIsBounds: Bool {
+    var shadowPathIsBounds: Bool {
         get {
             let fn = #objcMethod("shadowPathIsBounds", of: CALayer.self, as: (() -> Bool).self)
             return fn?(self)() ?? false
@@ -19,7 +19,7 @@ extension CALayer {
         }
     }
     
-    public var allowsGroupBlending: Bool {
+    var allowsGroupBlending: Bool {
         get {
             let fn = #objcMethod("allowsGroupBlending", of: CALayer.self, as: (() -> Bool).self)
             return fn?(self)() ?? false
@@ -30,7 +30,7 @@ extension CALayer {
         }
     }
 
-    public var compositingFilter: NSObject? {
+    var compositingFilter: NSObject? {
         get {
             let fn = #objcMethod("compositingFilter", of: CALayer.self, as: (() -> NSObject?).self)
             return fn?(self)()
