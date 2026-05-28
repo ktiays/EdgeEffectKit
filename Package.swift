@@ -14,14 +14,16 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ktiays/QuartzFilters.git", from: "1.1.0"),
-        .package(url: "https://github.com/ktiays/with.git", from: "2.1.4")
+        .package(url: "https://github.com/ktiays/With.git", from: "2.1.4"),
+        .package(url: "https://github.com/Helixform/SwiftyRuntime.git", from: "1.0.0"),
     ],
     targets: [
         .target(
             name: "EdgeEffectKit",
             dependencies: [
-                .product(name: "QuartzFilters", package: "QuartzFilters"),
-                .product(name: "With", package: "with")
+                "QuartzFilters",
+                "With",
+                "SwiftyRuntime",
             ]
         )
     ]

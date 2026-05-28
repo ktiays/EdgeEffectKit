@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ktiays/QuartzFilters.git",
       "state" : {
-        "revision" : "332a7a4ab507cf41a3131ce1f56f43c192d1ab59",
-        "version" : "1.1.0"
+        "revision" : "e671ea16dd45318886404edc633748e55fe25844",
+        "version" : "1.2.0"
       }
     },
     {
