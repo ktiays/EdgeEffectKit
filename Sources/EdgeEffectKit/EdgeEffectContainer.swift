@@ -13,7 +13,7 @@ import AppKit
 
 /// Configuration values for an effect rendered along one edge.
 public struct EdgeEffectConfiguration: Sendable, Hashable {
-    
+
     /// Constants that indicate where the transition region is placed relative to `extent`.
     public enum EdgeMaskPlacement: Sendable, Hashable {
 
@@ -27,22 +27,22 @@ public struct EdgeEffectConfiguration: Sendable, Hashable {
         /// Places the transition region beyond `extent`, leaving the entire extent in the final mask state.
         case afterExtent
     }
-    
+
     /// A Boolean value that indicates whether the edge effect includes variable blur.
     public var isBlurEnabled: Bool
-    
+
     /// The total distance from the edge that the effect conceptually covers.
     public var extent: CGFloat
-    
+
     /// The length of the region over which the effect transitions between its final state and no effect.
     public var transitionLength: CGFloat
-    
+
     /// The minimum opacity the edge fade reaches at the end of the transition.
     public var minimumOpacity: CGFloat
-    
+
     /// A value that determines where the transition region is positioned relative to `extent`.
     public var maskPlacement: EdgeMaskPlacement
-    
+
     /// Creates a configuration for an edge effect.
     ///
     /// - Parameters:
@@ -68,44 +68,44 @@ public struct EdgeEffectConfiguration: Sendable, Hashable {
 /// A view that renders configurable visual effects along the edges of its content.
 @objc(EEKEdgeEffectContainer)
 open class EdgeEffectContainer: _InternalBaseView {
-    
+
     /// Configuration values that control which edges render effects and how their background is sampled.
     public struct Configuration: Hashable, Sendable {
-        
+
         /// The color to replay behind edge effects instead of capturing the container background.
         public var replayBackgroundColor: PlatformColor?
-        
+
         /// The configuration for the top edge effect, or `nil` to disable it.
         public var top: EdgeEffectConfiguration?
-        
+
         /// The configuration for the left edge effect, or `nil` to disable it.
         public var left: EdgeEffectConfiguration?
-        
+
         /// The configuration for the right edge effect, or `nil` to disable it.
         public var right: EdgeEffectConfiguration?
-        
+
         /// The configuration for the bottom edge effect, or `nil` to disable it.
         public var bottom: EdgeEffectConfiguration?
     }
-    
+
     /// Resolved geometry for one edge's mask, measured relative to a baseline at the end of `extent`.
     private struct EdgeMaskLayout {
-        
+
         /// The mask length measured from the baseline toward the edge.
         let aboveBaseline: CGFloat
-        
+
         /// The mask length measured from the baseline away from the edge.
         let belowBaseline: CGFloat
-        
+
         /// The combined length the mask occupies along the edge's axis.
         var proposedLength: CGFloat { aboveBaseline + belowBaseline }
-        
+
         /// The length of the region rendered entirely in the final mask state.
         let solidLength: CGFloat
-        
+
         /// The length of the region over which the mask blends between its final state and no effect.
         let blendingLength: CGFloat
-        
+
         /// Derives the layout from `configuration`, anchoring the blending region according to its `maskPlacement`.
         init(_ configuration: EdgeEffectConfiguration) {
             let baselineAnchor: CGFloat =
@@ -123,7 +123,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             solidLength = max(0, configuration.extent - configuration.transitionLength * (1.0 - baselineAnchor))
         }
     }
-    
+
     /// The view displayed below the configured edge effects.
     open var contentView: PlatformView? {
         didSet {
@@ -138,7 +138,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             }
         }
     }
-    
+
     /// The active edge effect configuration for the container.
     open var configuration: EdgeEffectContainer.Configuration = .init() {
         didSet {
@@ -151,37 +151,36 @@ open class EdgeEffectContainer: _InternalBaseView {
             setNeedsLayout()
         }
     }
-    
+
     /// The active pocket views that render each enabled edge effect, keyed by edge.
     private var scrollPockets: [RectEdge: ScrollPocket] = [:]
 
     /// Cached layout metrics for each enabled edge configuration.
     private var maskLayouts: [EdgeEffectConfiguration: EdgeMaskLayout] = [:]
-    
+
     /// The container that hosts `contentView` beneath the edge effect pockets.
     private let contentContainer: _InternalBaseView = .init()
-    
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        
+
         configureSubviews()
     }
-    
+
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
-        
+
         configureSubviews()
     }
-    
+
     private func configureSubviews() {
         addSubview(contentContainer)
         makeViewConstraintsToEdge(contentContainer)
     }
-    
+
     open override func layoutSubviews() {
         super.layoutSubviews()
-        
-        contentContainer.frame = bounds
+
         for (edge, pocket) in scrollPockets {
             switch edge {
             case .top:
@@ -211,7 +210,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             }
         }
     }
-    
+
     /// Pins every edge of `view` to `container`, or to the receiver when `container` is `nil`.
     private func makeViewConstraintsToEdge(_ view: PlatformView, relativeTo container: PlatformView? = nil) {
         let container = container ?? self
@@ -223,7 +222,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
         ])
     }
-    
+
     /// Rebuilds the cached layout metrics for the currently enabled edges.
     private func updateMaskLayouts() {
         maskLayouts.removeAll()
@@ -240,13 +239,13 @@ open class EdgeEffectContainer: _InternalBaseView {
             maskLayouts[conf] = .init(conf)
         }
     }
-    
+
     /// Synchronizes each pocket's background source with `configuration`.
     private func updateBackgroundCaptures() {
         let replayBackgroundColor = configuration.replayBackgroundColor
         for pocket in scrollPockets.values {
             pocket.replayBackgroundColor = replayBackgroundColor
-            
+
             let pocketBackgroundCapture = pocket.backgroundCapture
             if replayBackgroundColor != nil {
                 pocketBackgroundCapture.removeFromSuperview()
@@ -256,7 +255,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             }
         }
     }
-    
+
     /// Creates, reuses, or removes pocket views to match the enabled edges in `configuration`.
     private func updatePockets() {
         func update(for edge: RectEdge, configuration: EdgeEffectConfiguration?) {
@@ -264,7 +263,7 @@ open class EdgeEffectContainer: _InternalBaseView {
                 scrollPockets.removeValue(forKey: edge)
                 return
             }
-            
+
             let pocket: ScrollPocket =
                 if let existing = scrollPockets[edge] {
                     existing
