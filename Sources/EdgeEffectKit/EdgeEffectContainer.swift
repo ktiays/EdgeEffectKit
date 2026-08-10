@@ -132,7 +132,7 @@ open class EdgeEffectContainer: _InternalBaseView {
             }
             if let contentView {
                 contentContainer.addSubview(contentView)
-                makeViewConstraintsToEdge(contentView)
+                setNeedsLayout()
             } else {
                 contentContainer.removeFromSuperview()
             }
@@ -175,11 +175,13 @@ open class EdgeEffectContainer: _InternalBaseView {
 
     private func configureSubviews() {
         addSubview(contentContainer)
-        makeViewConstraintsToEdge(contentContainer)
     }
 
     open override func layoutSubviews() {
         super.layoutSubviews()
+
+        contentContainer.frame = bounds
+        contentView?.frame = contentContainer.bounds
 
         for (edge, pocket) in scrollPockets {
             switch edge {
@@ -208,19 +210,12 @@ open class EdgeEffectContainer: _InternalBaseView {
                 }
                 pocket.frame = .init(x: bounds.width - conf.extent - layout.belowBaseline, y: 0, width: layout.proposedLength, height: bounds.height)
             }
-        }
-    }
 
-    /// Pins every edge of `view` to `container`, or to the receiver when `container` is `nil`.
-    private func makeViewConstraintsToEdge(_ view: PlatformView, relativeTo container: PlatformView? = nil) {
-        let container = container ?? self
-        view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            view.topAnchor.constraint(equalTo: container.topAnchor),
-            view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-        ])
+            let backgroundCapture = pocket.backgroundCapture
+            if backgroundCapture.superview === self {
+                backgroundCapture.frame = pocket.frame
+            }
+        }
     }
 
     /// Rebuilds the cached layout metrics for the currently enabled edges.
@@ -251,7 +246,7 @@ open class EdgeEffectContainer: _InternalBaseView {
                 pocketBackgroundCapture.removeFromSuperview()
             } else if pocketBackgroundCapture.superview != self {
                 insertSubview(pocketBackgroundCapture, belowSubview: contentContainer)
-                makeViewConstraintsToEdge(pocketBackgroundCapture, relativeTo: pocket)
+                setNeedsLayout()
             }
         }
     }
