@@ -25,6 +25,10 @@ let package = Package(
                 "With",
                 "SwiftyRuntime",
             ]
-        )
+        ),
+        .testTarget(
+            name: "EdgeEffectKitTests",
+            dependencies: ["EdgeEffectKit"]
+        ),
     ]
 )
