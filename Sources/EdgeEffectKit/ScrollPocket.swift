@@ -104,6 +104,12 @@ class ScrollPocket: _InternalBaseView {
         super.layoutSubviews()
         
         let bounds = self.bounds
+        
+        // Keep the mask the same size as the pocket (solid + blending == pocketLength).
+        // Writing `blendingLength` also invalidates the mask cache when the pocket resizes.
+        let edge = shadowGenerator.edge
+        let pocketLength = if edge == .top || edge == .bottom { bounds.height } else { bounds.width }
+        shadowGenerator.blendingLength = max(0, pocketLength - shadowGenerator.solidLength)
         shadowGenerator.scaleFactor = screenScaleFactor
         
         if pocketMaskedBlur.superview != nil {
