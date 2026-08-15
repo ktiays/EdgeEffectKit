@@ -104,10 +104,6 @@ class ScrollPocket: _InternalBaseView {
         super.layoutSubviews()
         
         let bounds = self.bounds
-
-        // `solidLength` and `blendingLength` come from `EdgeMaskLayout` and must stay
-        // tied to `transitionLength`. Replacing the blend with the pocket's full size
-        // would keep a fade even when `transitionLength` is 0 (a hard cut).
         shadowGenerator.scaleFactor = screenScaleFactor
         
         if pocketMaskedBlur.superview != nil {

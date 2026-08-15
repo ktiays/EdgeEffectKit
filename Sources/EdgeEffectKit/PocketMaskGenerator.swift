@@ -63,12 +63,9 @@ struct PocketMaskGenerator {
         }
         
         let edge = self.edge
-        let solidPixelCount = Int(ceil(max(solidLength, 0) * scaleFactor))
-        let blendingPixelCount = Int(ceil(max(blendingLength, 0) * scaleFactor))
+        let solidPixelCount = Int(ceil(solidLength * scaleFactor))
+        let blendingPixelCount = Int(ceil(blendingLength * scaleFactor))
         let pixelCount = solidPixelCount + blendingPixelCount
-        guard pixelCount > 0 else {
-            return nil
-        }
         
         let imageSize = if edge == .left || edge == .right {
             (pixelCount, 1)
