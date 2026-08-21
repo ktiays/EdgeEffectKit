@@ -18,7 +18,7 @@ extension CALayer {
             fn?(self)(newValue)
         }
     }
-    
+
     var allowsGroupBlending: Bool {
         get {
             let fn = #objcMethod("allowsGroupBlending", of: CALayer.self, as: (() -> Bool).self)
@@ -26,17 +26,6 @@ extension CALayer {
         }
         set {
             let fn = #objcMethod("setAllowsGroupBlending:", of: CALayer.self, as: ((Bool) -> Void).self)
-            fn?(self)(newValue)
-        }
-    }
-
-    var compositingFilter: NSObject? {
-        get {
-            let fn = #objcMethod("compositingFilter", of: CALayer.self, as: (() -> NSObject?).self)
-            return fn?(self)()
-        }
-        set {
-            let fn = #objcMethod("setCompositingFilter:", of: CALayer.self, as: ((NSObject?) -> Void).self)
             fn?(self)(newValue)
         }
     }
